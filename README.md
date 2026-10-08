@@ -48,7 +48,7 @@ After choosing LLM guidance, the interactive flow can also show optional **TAC-s
 1. **Code analysis specialist**: CFG, dominator, loop, def-use, and memory analyses discover opportunities.
 2. **Optimization specialist**: rule passes (or optional Ollama proposals) suggest transformations.
 3. **Orchestrator**: tests one candidate pass at a time and repeats to a fixed point.
-4. **Verification module**: compiles each candidate and performs differential testing across six argument vectors. A compile error, timeout, exit-code change, or output mismatch rejects it.
+4. **Verification module**: compiles each candidate and performs differential testing across 13 inputs: a default run, edge cases, and reproducible random values. A compile error, timeout, exit-code change, or output mismatch rejects it.
 5. **Cost evaluator**: scores `instruction_count + 3 × expensive_arithmetic_ops + temporary_registers + 10 × mean_execution_ms`. A verified candidate is still rejected unless this score decreases.
 
 The acceptance invariant is: **accepted = verified correct AND lower cost**. Since the current IR is updated only after verification succeeds, an incorrect transformation cannot be accepted.
@@ -66,6 +66,26 @@ The generator creates 500 small, deterministic C programs:
 | Loops | 80 |
 | Conditionals | 80 |
 | Mixed opportunities | 100 |
+
+## Demo Screenshots
+
+The interactive demonstration preserves program output while showing the accepted optimization decisions and compiler artifacts.
+
+### 1. Output Verification and Optimized LLVM IR
+
+![Program output verification and optimized LLVM IR](assets/screenshots/01-output-verification-and-llvm.png)
+
+### 2. LLVM IR and TAC-Style View Before Optimization
+
+![LLVM IR and TAC-style view before optimization](assets/screenshots/02-llvm-and-tac-before.png)
+
+### 3. TAC-Style Intermediate Code After Optimization
+
+![TAC-style view after optimization](assets/screenshots/03-tac-after-optimization.png)
+
+### 4. Target Assembly Excerpt
+
+![Target assembly excerpt](assets/screenshots/04-target-assembly.png)
 
 ## Presentation notes
 
