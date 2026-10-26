@@ -1,0 +1,291 @@
+{
+  "source_path": "/Users/soorya/project/dataset/programs/arithmetic_simple/arithmetic_simple_005.c",
+  "initial_ir": "; ModuleID = '/Users/soorya/project/dataset/programs/arithmetic_simple/arithmetic_simple_005.c'\nsource_filename = \"/Users/soorya/project/dataset/programs/arithmetic_simple/arithmetic_simple_005.c\"\ntarget datalayout = \"e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-n32:64-S128-Fn32\"\ntarget triple = \"arm64-apple-macosx26.5.0\"\n\n@.str = private unnamed_addr constant [4 x i8] c\"%d\\0A\\00\", align 1\n\n; Function Attrs: noinline nounwind ssp uwtable(sync)\ndefine i32 @compute(i32 noundef %x) #0 {\nentry:\n  %x.addr = alloca i32, align 4\n  %value = alloca i32, align 4\n  %y = alloca i32, align 4\n  store i32 %x, ptr %x.addr, align 4\n  store i32 15, ptr %value, align 4\n  %0 = load i32, ptr %value, align 4\n  %mul = mul nsw i32 %0, 8\n  store i32 %mul, ptr %y, align 4\n  %1 = load i32, ptr %y, align 4\n  ret i32 %1\n}\n\n; Function Attrs: noinline nounwind ssp uwtable(sync)\ndefine i32 @main(i32 noundef %argc, ptr noundef %argv) #0 {\nentry:\n  %retval = alloca i32, align 4\n  %argc.addr = alloca i32, align 4\n  %argv.addr = alloca ptr, align 8\n  store i32 0, ptr %retval, align 4\n  store i32 %argc, ptr %argc.addr, align 4\n  store ptr %argv, ptr %argv.addr, align 8\n  %0 = load i32, ptr %argc.addr, align 4\n  %call = call i32 @compute(i32 noundef %0)\n  %call1 = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %call)\n  ret i32 0\n}\n\ndeclare i32 @printf(ptr noundef, ...) #1\n\nattributes #0 = { noinline nounwind ssp uwtable(sync) \"frame-pointer\"=\"non-leaf\" \"no-trapping-math\"=\"true\" \"probe-stack\"=\"__chkstk_darwin\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"apple-m1\" \"target-features\"=\"+aes,+altnzcv,+bti,+ccdp,+ccidx,+ccpp,+complxnum,+crc,+dit,+dotprod,+flagm,+fp-armv8,+fp16fml,+fptoint,+fullfp16,+jsconv,+lse,+neon,+pauth,+perfmon,+predres,+ras,+rcpc,+rdm,+sb,+sha2,+sha3,+specrestrict,+ssbs,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8.5a,+v8a\" }\nattributes #1 = { \"frame-pointer\"=\"non-leaf\" \"no-trapping-math\"=\"true\" \"probe-stack\"=\"__chkstk_darwin\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"apple-m1\" \"target-features\"=\"+aes,+altnzcv,+bti,+ccdp,+ccidx,+ccpp,+complxnum,+crc,+dit,+dotprod,+flagm,+fp-armv8,+fp16fml,+fptoint,+fullfp16,+jsconv,+lse,+neon,+pauth,+perfmon,+predres,+ras,+rcpc,+rdm,+sb,+sha2,+sha3,+specrestrict,+ssbs,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8.5a,+v8a\" }\n\n!llvm.module.flags = !{!0, !1, !2, !3, !4}\n!llvm.ident = !{!5}\n\n!0 = !{i32 2, !\"SDK Version\", [2 x i32] [i32 26, i32 5]}\n!1 = !{i32 1, !\"wchar_size\", i32 4}\n!2 = !{i32 8, !\"PIC Level\", i32 2}\n!3 = !{i32 7, !\"uwtable\", i32 1}\n!4 = !{i32 7, !\"frame-pointer\", i32 1}\n!5 = !{!\"Apple clang version 21.0.0 (clang-2100.1.1.101)\"}\n",
+  "initial_cost": {
+    "instructions": 20,
+    "arithmetic": 1,
+    "temporaries": 12,
+    "runtime_ms": 111.44597199927375,
+    "weighted_cost": 1149.4597199927375
+  },
+  "final_cost": {
+    "instructions": 9,
+    "arithmetic": 0,
+    "temporaries": 5,
+    "runtime_ms": 2.1167499999137362,
+    "weighted_cost": 35.16749999913736
+  },
+  "final_ir": "; ModuleID = '/Users/soorya/project/dataset/programs/arithmetic_simple/arithmetic_simple_005.c'\nsource_filename = \"/Users/soorya/project/dataset/programs/arithmetic_simple/arithmetic_simple_005.c\"\ntarget datalayout = \"e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-n32:64-S128-Fn32\"\ntarget triple = \"arm64-apple-macosx26.5.0\"\n@.str = private unnamed_addr constant [4 x i8] c\"%d\\0A\\00\", align 1\n\ndefine i32 @compute(i32 noundef %x) #0 {\nentry:\n  %y = alloca i32, align 4\n  store i32 120, ptr %y, align 4\n  ret i32 120\n}\n\ndefine i32 @main(i32 noundef %argc, ptr noundef %argv) #0 {\nentry:\n  %argc.addr = alloca i32, align 4\n  store i32 %argc, ptr %argc.addr, align 4\n  %_t0 = load i32, ptr %argc.addr, align 4\n  %call = call i32 @compute(i32 noundef %_t0)\n  %call1 = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %call)\n  ret i32 0\n}\n\ndeclare i32 @printf(ptr noundef, ...) #1\n\nattributes #0 = { noinline nounwind ssp uwtable(sync) \"frame-pointer\"=\"non-leaf\" \"no-trapping-math\"=\"true\" \"probe-stack\"=\"__chkstk_darwin\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"apple-m1\" \"target-features\"=\"+aes,+altnzcv,+bti,+ccdp,+ccidx,+ccpp,+complxnum,+crc,+dit,+dotprod,+flagm,+fp-armv8,+fp16fml,+fptoint,+fullfp16,+jsconv,+lse,+neon,+pauth,+perfmon,+predres,+ras,+rcpc,+rdm,+sb,+sha2,+sha3,+specrestrict,+ssbs,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8.5a,+v8a\" }\nattributes #1 = { \"frame-pointer\"=\"non-leaf\" \"no-trapping-math\"=\"true\" \"probe-stack\"=\"__chkstk_darwin\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"apple-m1\" \"target-features\"=\"+aes,+altnzcv,+bti,+ccdp,+ccidx,+ccpp,+complxnum,+crc,+dit,+dotprod,+flagm,+fp-armv8,+fp16fml,+fptoint,+fullfp16,+jsconv,+lse,+neon,+pauth,+perfmon,+predres,+ras,+rcpc,+rdm,+sb,+sha2,+sha3,+specrestrict,+ssbs,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8.5a,+v8a\" }\n!llvm.module.flags = !{!0, !1, !2, !3, !4}\n!llvm.ident = !{!5}\n!0 = !{i32 2, !\"SDK Version\", [2 x i32] [i32 26, i32 5]}\n!1 = !{i32 1, !\"wchar_size\", i32 4}\n!2 = !{i32 8, !\"PIC Level\", i32 2}\n!3 = !{i32 7, !\"uwtable\", i32 1}\n!4 = !{i32 7, !\"frame-pointer\", i32 1}\n!5 = !{!\"Apple clang version 21.0.0 (clang-2100.1.1.101)\"}",
+  "decisions": [
+    {
+      "iteration": 1,
+      "pass_name": "ConstantPropagation",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 1, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 1}. Try ConstantPropagation; accept only if equivalence and weighted cost improve.",
+      "changes": 1,
+      "verified": true,
+      "cost_before": 1149.4597199927375,
+      "cost_after": 54.64305333280936,
+      "decision": "accepted",
+      "reason": "Verified and lower cost.",
+      "details": [
+        "Propagated constant 15 from %value to %_t0"
+      ],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 1,
+      "pass_name": "ConstantFolding",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 1, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 1}. Try ConstantFolding; accept only if equivalence and weighted cost improve.",
+      "changes": 1,
+      "verified": true,
+      "cost_before": 54.64305333280936,
+      "cost_after": 49.369443335667405,
+      "decision": "accepted",
+      "reason": "Verified and lower cost.",
+      "details": [
+        "Folded %mul = mul -> 120 (i32)"
+      ],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 1,
+      "pass_name": "StrengthReduction",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 1, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 1}. Try StrengthReduction; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 49.369443335667405,
+      "cost_after": 49.369443335667405,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 1,
+      "pass_name": "CommonSubexpressionElimination",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 1, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 1}. Try CommonSubexpressionElimination; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 49.369443335667405,
+      "cost_after": 49.369443335667405,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 1,
+      "pass_name": "LoopInvariantCodeMotion",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 1, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 1}. Try LoopInvariantCodeMotion; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 49.369443335667405,
+      "cost_after": 49.369443335667405,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 1,
+      "pass_name": "DeadCodeElimination",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 1, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 1}. Try DeadCodeElimination; accept only if equivalence and weighted cost improve.",
+      "changes": 8,
+      "verified": true,
+      "cost_before": 49.369443335667405,
+      "cost_after": 37.36833333376368,
+      "decision": "accepted",
+      "reason": "Verified and lower cost.",
+      "details": [
+        "Eliminated dead store to unread memory %x.addr",
+        "Eliminated dead store to unread memory %value",
+        "Eliminated unused computation: %x.addr = alloca",
+        "Eliminated unused computation: %value = alloca",
+        "Eliminated dead store to unread memory %retval",
+        "Eliminated dead store to unread memory %argv.addr",
+        "Eliminated unused computation: %retval = alloca",
+        "Eliminated unused computation: %argv.addr = alloca"
+      ],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 2,
+      "pass_name": "ConstantPropagation",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try ConstantPropagation; accept only if equivalence and weighted cost improve.",
+      "changes": 1,
+      "verified": true,
+      "cost_before": 37.36833333376368,
+      "cost_after": 35.16749999913736,
+      "decision": "accepted",
+      "reason": "Verified and lower cost.",
+      "details": [
+        "Propagated constant 120 from %y to %_t1"
+      ],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 2,
+      "pass_name": "ConstantFolding",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try ConstantFolding; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 2,
+      "pass_name": "StrengthReduction",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try StrengthReduction; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 2,
+      "pass_name": "CommonSubexpressionElimination",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try CommonSubexpressionElimination; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 2,
+      "pass_name": "LoopInvariantCodeMotion",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try LoopInvariantCodeMotion; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 2,
+      "pass_name": "DeadCodeElimination",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try DeadCodeElimination; accept only if equivalence and weighted cost improve.",
+      "changes": 2,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 37.78208000361337,
+      "decision": "rejected",
+      "reason": "Verified, but did not reduce weighted cost.",
+      "details": [
+        "Eliminated dead store to unread memory %y",
+        "Eliminated unused computation: %y = alloca"
+      ],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 3,
+      "pass_name": "ConstantPropagation",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try ConstantPropagation; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 3,
+      "pass_name": "ConstantFolding",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try ConstantFolding; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 3,
+      "pass_name": "StrengthReduction",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try StrengthReduction; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 3,
+      "pass_name": "CommonSubexpressionElimination",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try CommonSubexpressionElimination; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 3,
+      "pass_name": "LoopInvariantCodeMotion",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try LoopInvariantCodeMotion; accept only if equivalence and weighted cost improve.",
+      "changes": 0,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 35.16749999913736,
+      "decision": "skipped",
+      "reason": "No applicable opportunity.",
+      "details": [],
+      "proposal_source": "rule"
+    },
+    {
+      "iteration": 3,
+      "pass_name": "DeadCodeElimination",
+      "rationale": "Analysis={'constant_pairs': 0, 'algebraic_patterns': 0, 'dead_results': 0, 'repeated_subexpressions': 0, 'arithmetic_ops': 0}. Try DeadCodeElimination; accept only if equivalence and weighted cost improve.",
+      "changes": 2,
+      "verified": true,
+      "cost_before": 35.16749999913736,
+      "cost_after": 36.49916333009605,
+      "decision": "rejected",
+      "reason": "Verified, but did not reduce weighted cost.",
+      "details": [
+        "Eliminated dead store to unread memory %y",
+        "Eliminated unused computation: %y = alloca"
+      ],
+      "proposal_source": "rule"
+    }
+  ],
+  "final_verification_passed": true,
+  "baseline_output": "120\n",
+  "optimized_output": "120\n",
+  "verification_tests_run": 13,
+  "verification_tests_passed": 13,
+  "timings": {
+    "source_compile_seconds": 0.04954720800014911,
+    "optimization_seconds": 2.570475999998962,
+    "final_compile_seconds": 0.03033691699965857,
+    "final_verification_seconds": 0.3755915420006204,
+    "total_seconds": 3.3610874170008174
+  },
+  "accepted": 4,
+  "iterations_to_convergence": 3,
+  "reduction_percent": 96.94051915108783
+}

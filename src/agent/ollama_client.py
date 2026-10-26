@@ -23,6 +23,29 @@ class OllamaClient:
         "tinyllama:latest"
     ]
 
+    @staticmethod
+    def list_available_models(host: Optional[str] = None) -> List[str]:
+        """Return model names installed in the connected Ollama instance."""
+        if not ollama:
+            return []
+
+        try:
+            client = ollama.Client(host=host) if host else ollama
+            response = client.list()
+            models = response.get("models", []) if isinstance(response, dict) else getattr(response, "models", [])
+            names = []
+            for model in models:
+                if isinstance(model, dict):
+                    name = model.get("name") or model.get("model") or ""
+                else:
+                    name = getattr(model, "name", None) or getattr(model, "model", "")
+                if name:
+                    names.append(str(name))
+            return sorted(set(names), key=str.casefold)
+        except Exception as error:
+            logger.warning("Could not list Ollama models: %s", error)
+            return []
+
     def __init__(self, requested_model: Optional[str] = None, host: Optional[str] = None):
         self.requested_model = requested_model
         self.host = host
@@ -35,13 +58,7 @@ class OllamaClient:
             return
 
         try:
-            client = ollama.Client(host=self.host) if self.host else ollama
-            model_list = client.list()
-            available = []
-            for m in model_list.get("models", []):
-                name = m.get("name") or m.get("model") or ""
-                if name:
-                    available.append(name)
+            available = self.list_available_models(host=self.host)
 
             if self.requested_model:
                 # Check exact or prefix match

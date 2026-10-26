@@ -132,6 +132,7 @@ class AutonomousRun:
     optimized_output: str = ""
     verification_tests_run: int = 0
     verification_tests_passed: int = 0
+    timings: Dict[str, float] = field(default_factory=dict)
 
     @property
     def accepted(self) -> int:
@@ -166,13 +167,16 @@ class AutonomousOrchestrator:
 
     def optimize_file(self, source_path: str) -> AutonomousRun:
         """Run analyze -> propose -> verify -> evaluate -> accept/reject to convergence."""
+        total_started = time.perf_counter()
         source_path = os.path.abspath(source_path)
         source_text = open(source_path, encoding="utf-8").read()
         with tempfile.TemporaryDirectory(prefix="agent_opt_") as work:
             baseline_ir = os.path.join(work, "baseline.ll")
             baseline_binary = os.path.join(work, "baseline.bin")
+            compile_started = time.perf_counter()
             self.runner.compile_to_ir(source_path, baseline_ir)
             self.runner.compile_ir_to_binary(baseline_ir, baseline_binary)
+            source_compile_seconds = time.perf_counter() - compile_started
             with open(baseline_ir, encoding="utf-8") as handle:
                 baseline_ir_text = handle.read()
                 current = IRParser(baseline_ir_text).parse()
@@ -180,6 +184,7 @@ class AutonomousOrchestrator:
             current_runtime = self._runtime_ms(baseline_binary)
             initial = self.cost_evaluator.evaluate(current, current_runtime)
             decisions: List[Decision] = []
+            optimization_started = time.perf_counter()
             for iteration in range(1, self.max_iterations + 1):
                 accepted_this_round = False
                 facts = self.analysis_specialist.analyze(current)
@@ -215,21 +220,34 @@ class AutonomousOrchestrator:
                                                   "accepted", "Verified and lower cost.", result.details, proposal_source))
                 if not accepted_this_round:
                     break
+            optimization_seconds = time.perf_counter() - optimization_started
 
             final_cost = self.cost_evaluator.evaluate(current, current_runtime)
             final_ir = IREmitter.emit(current)
             final_ir_path = os.path.join(work, "final.ll")
             final_binary = os.path.join(work, "final.bin")
             IREmitter.write_to_file(current, final_ir_path)
+            final_compile_started = time.perf_counter()
             self.runner.compile_ir_to_binary(final_ir_path, final_binary)
+            final_compile_seconds = time.perf_counter() - final_compile_started
+            final_verification_started = time.perf_counter()
             final_report = self.verifier.verify(baseline_binary, final_binary)
+            final_verification_seconds = time.perf_counter() - final_verification_started
             first_result = final_report.results[0] if final_report.results else None
+            timings = {
+                "source_compile_seconds": source_compile_seconds,
+                "optimization_seconds": optimization_seconds,
+                "final_compile_seconds": final_compile_seconds,
+                "final_verification_seconds": final_verification_seconds,
+                "total_seconds": time.perf_counter() - total_started,
+            }
             return AutonomousRun(
                 source_path, baseline_ir_text, initial, final_cost, final_ir, decisions, final_report.is_valid,
                 baseline_output=first_result.baseline_stdout if first_result else "",
                 optimized_output=first_result.optimized_stdout if first_result else "",
                 verification_tests_run=final_report.tests_run,
                 verification_tests_passed=final_report.tests_passed,
+                timings=timings,
             )
 
     def _verify_candidate(self, module, baseline_binary: str, work: str, iteration: int,

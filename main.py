@@ -15,6 +15,7 @@ from src.parser import Parser
 from src.ast import ASTPrinter
 from src.semantic import SemanticAnalyzer
 from src.llvm import ClangRunner, IRParser, IREmitter
+from src.llvm.clang_runner import ClangError
 from src.analysis import ControlFlowGraph, DominatorAnalysis, LoopAnalysis, DefUseAnalysis
 from src.agent import OptimizationAgent
 from src.optimizations import PassManager
@@ -24,6 +25,8 @@ from src.benchmarking import DatasetExperiment
 from src.dataset import DatasetGenerator
 from src.cli import CompilerCLI
 from src.cli.interactive import run_interactive
+from src.cli.run_report import run_file
+from rich.syntax import Syntax
 
 
 def start_menu(args) -> None:
@@ -34,7 +37,7 @@ def start_menu(args) -> None:
     print("3. Run full prepared dataset (500 programs)")
     choice = input("Choose 1, 2, or 3: ").strip()
     if choice == "1":
-        run_interactive(args.model, args.llm)
+        run_interactive(args.model, args.llm, show_output=args.show_output, backend=args.backend, native_level=args.native_level)
         return
     if choice in {"2", "3"}:
         programs = DatasetGenerator(args.dataset_dir).generate()
@@ -77,10 +80,28 @@ def main():
     parser.add_argument("--interactive", action="store_true", help="Paste C code and view the full agent decision log")
     parser.add_argument("--llm", action="store_true", help="Use local Ollama/Qwen to order proposals (verification remains mandatory)")
 
+    parser.add_argument("--backend", choices=["auto", "custom", "clang"], default="auto", help="C backend: native Clang handles complex constructs without the educational IR parser")
+    parser.add_argument("--native-level", choices=["-O1", "-O2", "-O3", "-Os"], default="-O2")
+    parser.add_argument("--python-opt", type=int, choices=[0, 1, 2], default=0, help="Python bytecode optimization; 1 removes asserts, 2 also removes docstrings")
+    parser.add_argument("--stdin-file", help="Text file to supply as standard input for explicit native/Python execution")
+    parser.add_argument("--timeout", type=int, choices=range(1, 61), default=5, metavar="1..60")
+    output_options = parser.add_mutually_exclusive_group()
+    output_options.add_argument("--show-output", dest="show_output", action="store_true", help="Display original and optimized program output below the code")
+    output_options.add_argument("--no-output", dest="show_output", action="store_false", help="Skip output display (for non-interactive runs)")
+    parser.set_defaults(show_output=None)
+    parser.add_argument("--history", action="store_true", help="Browse saved experiments without compiling")
+    parser.add_argument("--no-history-prompt", action="store_true", help="Skip the history question after a run")
     args = parser.parse_args()
+    from src.experiment_history import browse_terminal
+    if args.history:
+        browse_terminal(prompt=False)
+        return
+
 
     if args.interactive:
-        run_interactive(args.model, args.llm)
+        run_interactive(args.model, args.llm, show_output=args.show_output, backend=args.backend, native_level=args.native_level)
+        if not args.no_history_prompt:
+            browse_terminal()
         return
 
     if args.generate_dataset or args.run_dataset:
@@ -98,6 +119,46 @@ def main():
     # entire autonomous compile/optimize/verify/evaluate process.
     if not args.source_file:
         start_menu(args)
+        if not args.no_history_prompt:
+            browse_terminal()
+        return
+
+    from src.cli.native_report import compile_native_file
+    from pathlib import Path
+    stdin_input = Path(args.stdin_file).read_text() if args.stdin_file else ""
+    if Path(args.source_file).suffix.lower() == ".py" or args.backend == "clang":
+        try:
+            compile_native_file(args.source_file, language="Python" if Path(args.source_file).suffix.lower() == ".py" else "C",
+                                level=args.native_level, python_level=args.python_opt, report_path=args.report,
+                                show_output=args.show_output, stdin_input=stdin_input, timeout=args.timeout)
+        except (OSError, ValueError, SyntaxError, ClangError) as error:
+            parser.exit(1, f"Compilation failed: {error}\n")
+        if not args.no_history_prompt:
+            browse_terminal()
+        return
+
+    if not (args.analyze or args.emit_ir) or args.optimize or args.validate or args.benchmark:
+        try:
+            run = run_file(os.path.abspath(args.source_file), model_name=args.model,
+                           use_llm=args.llm or bool(args.model), report_path=args.report,
+                           show_output=args.show_output, benchmark=args.benchmark,
+                           iterations=args.iterations, chart=args.chart, diff=args.diff)
+        except Exception as error:
+            if args.backend == "custom":
+                parser.exit(1, f"Custom optimization failed: {error}\n")
+            print(f"Custom optimizer unavailable: {error}\nUsing native Clang; custom verification and cost metrics are unavailable.")
+            try:
+                compile_native_file(args.source_file, level=args.native_level, report_path=args.report,
+                                    show_output=args.show_output, stdin_input=stdin_input, timeout=args.timeout)
+            except (OSError, ValueError, ClangError) as native_error:
+                parser.exit(1, f"Compilation failed: {native_error}\n")
+            if not args.no_history_prompt:
+                browse_terminal()
+            return
+        if not args.no_history_prompt:
+            browse_terminal()
+        if not run.final_verification_passed:
+            sys.exit(1)
         return
 
     cli = CompilerCLI()
