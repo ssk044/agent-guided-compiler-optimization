@@ -75,3 +75,17 @@ reports/history/
 reports/streamlit/
 reports/runs/
 output/hello_world/
+
+# Local tooling and additional credential files
+.agents/
+.codex/
+.gcp/
+.azure/
+.netrc
+.npmrc
+.pypirc
+*.keystore
+*.jks
+*.sqlite
+*.sqlite3
+*.db
