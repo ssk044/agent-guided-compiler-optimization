@@ -20,6 +20,8 @@ from src.agent.ollama_client import OllamaClient
 from src.benchmarking.experiment import DatasetExperiment
 from src.experiment_history import save_experiment, save_output, list_experiments, run_label, saved_views
 from src.compiler import compile_python
+from src.compiler.artifacts import assembly_from_ir, save_c_artifacts
+from src.compiler.source_optimizer import optimize_c_source
 from src.compiler.c_backend import compile_native_c, execute_ir_pair
 from src.cli.run_report import render_tac
 from src.dataset import DatasetGenerator
@@ -128,6 +130,7 @@ def run_c(source: str, use_llm: bool, model_name: str | None, backend: str = "Au
             return result
 
     return {
+        **optimize_c_source(source),
         "language": "C",
         "source": source,
         "model": model_name if use_llm else "Rule-based optimizer",
@@ -135,6 +138,7 @@ def run_c(source: str, use_llm: bool, model_name: str | None, backend: str = "Au
         "final_breakdown": asdict(run.final_cost),
         "decisions": [asdict(decision) for decision in run.decisions],
         "code": run.final_ir,
+        "optimized_assembly": assembly_from_ir(run.final_ir),
         "initial_ir": run.initial_ir,
         "baseline_output": run.baseline_output,
         "optimized_output": run.optimized_output,
@@ -251,7 +255,7 @@ def show_compile_result(result: dict, show_code: bool) -> None:
         if lang == "C" and result["custom_optimizer"]:
             st.markdown('<div class="section-label">Understand the optimized program</div>', unsafe_allow_html=True)
             st.caption("Start with the readable TAC-style view. LLVM IR is the lower-level compiler representation; compare its before and after versions in the other tabs.")
-            code_tabs = st.tabs(["TAC · after", "TAC · before", "LLVM IR · after", "LLVM IR · before", "Original source", "Optimized code"])
+            code_tabs = st.tabs(["TAC · after", "TAC · before", "LLVM IR · after", "LLVM IR · before", "Original source", "Optimized code · assembly", "Optimized C source"])
             with code_tabs[0]:
                 st.code(render_tac(result["code"]), language="text", line_numbers=True)
             with code_tabs[1]:
@@ -263,13 +267,17 @@ def show_compile_result(result: dict, show_code: bool) -> None:
             with code_tabs[4]:
                 st.code(result["source"], language="c", line_numbers=True)
             with code_tabs[5]:
-                st.caption("The optimizer emits executable LLVM IR. It does not generate rewritten C source.")
-                st.code(result["code"], language="llvm", line_numbers=True)
+                st.caption("Assembly generated from the optimized LLVM IR. The C source tab uses a separate conservative source optimizer.")
+                st.code(result.get("optimized_assembly", "Recompile to generate assembly for this run."), language="asm", line_numbers=True)
+            with code_tabs[6]:
+                st.caption(result.get("source_optimization_note", "Recompile to generate the C source view."))
+                st.code(result.get("optimized_source", result["source"]), language="c", line_numbers=True)
         elif lang == "C":
-            native_tabs = st.tabs(["Original C", "LLVM IR · before", "Optimized code / LLVM IR · after"])
-            for tab, code, language in zip(native_tabs, [result["source"], result["initial_ir"], result["code"]], ["c", "llvm", "llvm"]):
+            native_tabs = st.tabs(["Original C", "LLVM IR · before", "Optimized LLVM IR", "Optimized code · assembly", "Optimized C source"])
+            for tab, code, language in zip(native_tabs, [result["source"], result["initial_ir"], result["code"], result.get("optimized_assembly", "Recompile to generate assembly for this run."), result.get("optimized_source", result["source"])], ["c", "llvm", "llvm", "asm", "c"]):
                 with tab:
                     st.code(code, language=language, line_numbers=True)
+            st.caption(result.get("source_optimization_note", "Recompile to generate the C source view."))
             st.caption("Native Clang supports constructs beyond the educational TAC parser. TAC and custom cost scores are unavailable for this backend.")
         else:
             st.markdown('<div class="section-label">Python compile output</div>', unsafe_allow_html=True)
@@ -281,6 +289,15 @@ def show_compile_result(result: dict, show_code: bool) -> None:
                 st.code(result["code"], language="text", line_numbers=True)
             with python_tabs[2]:
                 st.code(result["baseline_bytecode"], language="text", line_numbers=True)
+        if lang == "C" and result.get("optimized_assembly"):
+            st.caption("Download C source, LLVM IR, and target assembly separately.")
+            if result.get("optimized_source"):
+                st.download_button("Download optimized C source (.c)", result["optimized_source"],
+                                   file_name="optimized.c", mime="text/plain", key=f"c_source_{fingerprint}")
+            st.download_button("Download optimized assembly (.s)", result["optimized_assembly"],
+                               file_name="optimized.s", mime="text/plain", key=f"assembly_{fingerprint}")
+            if result.get("artifact_dir"):
+                st.caption(f"Open this folder in VS Code to view both outputs: {result['artifact_dir']}")
         st.download_button(
             f"Download compiled {lang} output (.{result['extension']})",
             data=result.get("pyc", result["code"]),
@@ -433,6 +450,10 @@ with compiler_tab:
             result["fingerprint"] = source_fingerprint
             result.setdefault("source", source)
             result.setdefault("model", "CPython" if chosen_language == "Python" else "Clang")
+            if chosen_language == "C":
+                from uuid import uuid4
+                result["artifact_dir"] = str(save_c_artifacts(
+                    result, Path("reports/streamlit") / uuid4().hex))
             result["history_id"] = save_experiment(result, interface="Streamlit", source_name="Pasted program")
             st.session_state["compiler_result"] = result
             st.session_state.pop("compiler_error", None)

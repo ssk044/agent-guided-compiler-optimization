@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.syntax import Syntax
 
 from src.compiler import compile_python
+from src.compiler.artifacts import save_c_artifacts
 from src.compiler.c_backend import compile_native_c, execute_ir_pair
 
 
@@ -38,10 +39,11 @@ def compile_native_file(path, *, language='C', level='-O2', python_level=0,
     else:
         result = compile_native_c(source, level)
         views = [('Original C', source, 'c'), ('LLVM IR before', result['initial_ir'], 'llvm'),
-                 ('Optimized code / LLVM IR after', result['code'], 'llvm')]
-        for filename, content in [('original.c', source), ('before.ll', result['initial_ir']), ('optimized.ll', result['code'])]:
-            (artifacts / filename).write_text(content, encoding='utf-8')
-        note = (f'Native Clang {level}; compiled and linked without executing. '
+                 ('Optimized LLVM IR', result['code'], 'llvm'),
+                 ('Optimized code · assembly', result['optimized_assembly'], 'asm'),
+                 ('Optimized C source', result['optimized_source'], 'c')]
+        save_c_artifacts(result, artifacts)
+        note = result['source_optimization_note'] + ' ' + (f'Native Clang {level}; compiled and linked without executing. '
                 'Model guidance, educational TAC and custom cost metrics do not apply. '
                 'Differential verification has not been run.')
     console.print(note)

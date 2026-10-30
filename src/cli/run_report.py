@@ -13,6 +13,8 @@ from rich.table import Table
 
 from src.agent.autonomous import AutonomousOrchestrator
 from src.llvm import IRParser, TACRenderer
+from src.compiler.artifacts import assembly_from_ir
+from src.compiler.source_optimizer import optimize_c_source
 
 
 COST_NOTE = ("Weighted cost = instructions + 3 × arithmetic operations + temporary values "
@@ -50,12 +52,16 @@ def show_run(run, source: str, model_name=None, use_llm=False, *,
     console.print(COST_NOTE)
     console.print("Guidance used: " + ", ".join(sorted({d.proposal_source for d in run.decisions}) or ["No proposals"]))
     console.print("Pipeline timings (seconds): " + json.dumps(run.timings))
+    source_view = optimize_c_source(source)
+    assembly = assembly_from_ir(run.final_ir)
     views = [("Original C source", source, "c"),
              ("TAC before optimization", render_tac(run.initial_ir), "text"),
              ("TAC after optimization", render_tac(run.final_ir), "text"),
              ("LLVM IR before optimization", run.initial_ir, "llvm"),
-             ("Optimized code / LLVM IR after optimization", run.final_ir, "llvm")]
-    console.print("Optimized code is executable LLVM IR; rewritten C source is not generated.")
+             ("Optimized LLVM IR", run.final_ir, "llvm"),
+             ("Optimized code · assembly", assembly, "asm"),
+             ("Optimized C source", source_view["optimized_source"], "c")]
+    console.print(source_view["source_optimization_note"])
     for title, code, language in views:
         console.print(f"\n{title}", style="bold cyan")
         console.print(Syntax(code, language, line_numbers=True, word_wrap=True))
@@ -66,7 +72,7 @@ def show_run(run, source: str, model_name=None, use_llm=False, *,
     artifacts = path.parent / (path.stem + "_artifacts")
     artifacts.mkdir(exist_ok=True)
     for filename, content in [("original.c", source), ("before.ll", run.initial_ir),
-                              ("optimized.ll", run.final_ir), ("before.tac", views[1][1]),
+                              ("optimized.ll", run.final_ir), ("optimized.s", assembly), ("optimized.c", source_view["optimized_source"]), ("before.tac", views[1][1]),
                               ("after.tac", views[2][1])]:
         (artifacts / filename).write_text(content, encoding="utf-8")
     summary = {"model": model, "initial_breakdown": before, "final_breakdown": after,
@@ -97,8 +103,8 @@ def show_run(run, source: str, model_name=None, use_llm=False, *,
             lines += ["", f"## {title} · default verification run", "`````text", output or "(no output)", "`````"]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     from src.experiment_history import save_experiment
-    save_experiment(dict(summary, language="C", source=source, code=run.final_ir,
-                         initial_ir=run.initial_ir, custom_optimizer=True,
+    save_experiment(dict(summary, **source_view, language="C", source=source, code=run.final_ir,
+                         initial_ir=run.initial_ir, optimized_assembly=assembly, custom_optimizer=True,
                          initial_cost=before["weighted_cost"], final_cost=after["weighted_cost"],
                          baseline_output=run.baseline_output, optimized_output=run.optimized_output),
                     interface="Terminal", source_name=Path(run.source_path).name, report_path=path)

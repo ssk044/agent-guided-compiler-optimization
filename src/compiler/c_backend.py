@@ -9,6 +9,8 @@ import tempfile
 import time
 
 from src.llvm.clang_runner import ClangRunner
+from src.compiler.artifacts import assembly_from_ir
+from src.compiler.source_optimizer import optimize_c_source
 
 
 def compile_native_c(source: str, optimization_level: str = '-O2') -> dict:
@@ -27,7 +29,8 @@ def compile_native_c(source: str, optimization_level: str = '-O2') -> dict:
         for ir, name in ((baseline, 'before'), (optimized, 'after')):
             runner.compile_ir_to_binary(str(ir), str(root / name), opt_flags=['-lm'])
         elapsed = time.perf_counter() - started
-        return dict(language='C', source=source, code=optimized.read_text(), initial_ir=baseline.read_text(),
+        return dict(**optimize_c_source(source), language='C', source=source, code=optimized.read_text(), initial_ir=baseline.read_text(),
+                    optimized_assembly=assembly_from_ir(optimized.read_text()),
                     timings=dict(source_compile_seconds=elapsed, optimization_seconds=0.0,
                                  final_compile_seconds=0.0, final_verification_seconds=0.0, total_seconds=elapsed),
                     custom_optimizer=False, backend=f'Clang {optimization_level}', model='Clang native optimizer',

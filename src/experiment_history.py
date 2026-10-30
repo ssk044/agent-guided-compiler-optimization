@@ -89,7 +89,9 @@ def saved_views(result: dict) -> list[tuple[str, str, str]]:
                   ('Compiled bytecode', result.get('code', ''), 'text')]
     else:
         views += [('LLVM IR before', result.get('initial_ir', ''), 'llvm'),
-                  ('Optimized code / LLVM IR after', result.get('code', ''), 'llvm')]
+                  ('Optimized LLVM IR', result.get('code', ''), 'llvm'),
+                  ('Optimized code · assembly', result.get('optimized_assembly', ''), 'asm'),
+                  ('Optimized C source', result.get('optimized_source', ''), 'c')]
         if result.get('custom_optimizer'):
             from src.cli.run_report import render_tac
             for title, key in [('TAC before', 'initial_ir'), ('TAC after', 'code')]:

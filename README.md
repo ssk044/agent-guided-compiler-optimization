@@ -41,14 +41,26 @@ Paste a full C program, then enter `END` on its own line. The terminal asks whet
 
 ## Localhost Web UI
 
-The terminal workflow remains the recommended academic demonstration. For a polished browser interface, run:
+From the project folder, create a local environment and install the dependencies (including Streamlit):
 
 ```bash
-python3 -m pip install -r requirements.txt
-python3 -m streamlit run app.py
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
 Open the local URL printed by Streamlit, normally `http://localhost:8501`. The workbench accepts C and Python, can make a best-effort language detection or use your manual selection, and reports compile/optimization timing. For C, the report includes readable TAC and LLVM IR before and after optimization when the custom optimizer handles the program. After the compiled code, choose whether to view program output. C output comes from the verifier's matching baseline and optimized runs. Python compiles through CPython to bytecode and a version-specific `.pyc`; it only runs if you explicitly choose to view its output. The sidebar lists every model returned by the connected Ollama service, lets you refresh the inventory, and lets you select one for optional C optimization guidance.
+
+For subsequent launches on macOS/Linux, run `./.venv/bin/python -m streamlit run app.py` from the project folder. This uses the same environment where Streamlit was installed. On Windows, use `.venv\Scripts\python.exe -m streamlit run app.py`.
+
+C compilation requires `clang` on your PATH (on macOS, install Apple Command Line Tools with `xcode-select --install`). Ollama is optional; leave model guidance disabled to use the rule-based optimizer.
+
+## Validation
+
+```bash
+./.venv/bin/python run_tests.py
+```
 
 ## Architecture
 
@@ -58,7 +70,7 @@ Open the local URL printed by Streamlit, normally `http://localhost:8501`. The w
 4. **Verification module**: compiles each candidate and performs differential testing across 13 inputs: a default run, edge cases, and reproducible random values. A compile error, timeout, exit-code change, or output mismatch rejects it.
 5. **Cost evaluator**: scores `instruction_count + 3 × expensive_arithmetic_ops + temporary_registers + 10 × mean_execution_ms`. A verified candidate is still rejected unless this score decreases.
 
-The acceptance invariant is: **accepted = verified correct AND lower cost**. Since the current IR is updated only after verification succeeds, an incorrect transformation cannot be accepted.
+The acceptance rule is: **accepted = differential tests passed AND lower measured cost**. The current IR is updated only after these checks succeed. Differential testing covers the selected inputs; it is not a proof of equivalence for all possible executions.
 
 ## Dataset
 
@@ -74,25 +86,53 @@ The generator creates 500 small, deterministic C programs:
 | Conditionals | 80 |
 | Mixed opportunities | 100 |
 
-## Demo Screenshots
+## Streamlit walkthrough
 
-The interactive demonstration preserves program output while showing the accepted optimization decisions and compiler artifacts.
+Screenshots follow the original capture order, from entering source to comparing program output. Steps 2 and 3 show overlapping views of the same report. Measurements illustrate one run and are not guaranteed performance results.
 
-### 1. Output Verification and Optimized LLVM IR
+### 1. Source editor and build settings
 
-![Program output verification and optimized LLVM IR](assets/screenshots/01-output-verification-and-llvm.png)
+![Source editor and build settings](assets/screenshots/streamlit/01-workbench.png)
 
-### 2. LLVM IR and TAC-Style View Before Optimization
+### 2. Compile report and verification
 
-![LLVM IR and TAC-style view before optimization](assets/screenshots/02-llvm-and-tac-before.png)
+![Compile report and verification](assets/screenshots/streamlit/02-compile-report.png)
 
-### 3. TAC-Style Intermediate Code After Optimization
+### 3. Optimization measurements
 
-![TAC-style view after optimization](assets/screenshots/03-tac-after-optimization.png)
+![Optimization measurements](assets/screenshots/streamlit/03-optimization-metrics.png)
 
-### 4. Target Assembly Excerpt
+### 4. TAC after optimization
 
-![Target assembly excerpt](assets/screenshots/04-target-assembly.png)
+![TAC after optimization](assets/screenshots/streamlit/04-tac-after.png)
+
+### 5. TAC before optimization
+
+![TAC before optimization](assets/screenshots/streamlit/05-tac-before.png)
+
+### 6. LLVM IR after optimization
+
+![LLVM IR after optimization](assets/screenshots/streamlit/06-llvm-after.png)
+
+### 7. LLVM IR before optimization
+
+![LLVM IR before optimization](assets/screenshots/streamlit/07-llvm-before.png)
+
+### 8. Original C source
+
+![Original C source](assets/screenshots/streamlit/08-original-source.png)
+
+### 9. Target assembly
+
+![Target assembly](assets/screenshots/streamlit/09-target-assembly.png)
+
+### 10. Conservative optimized C source
+
+![Conservative optimized C source](assets/screenshots/streamlit/10-optimized-c-source.png)
+
+### 11. Matching original and optimized output
+
+![Matching original and optimized output](assets/screenshots/streamlit/11-matching-output.png)
 
 ## Presentation notes
 
@@ -105,7 +145,7 @@ verified optimization pipeline. Each run shows the selected guidance, weighted
 cost before/after, cost saved, percentage reduction, instruction/arithmetic/
 temporary counts, execution timings, and verification results. TAC includes all
 functions. Both show original C, TAC before/after, LLVM IR before/after, and the
-optimized code (LLVM IR; the optimizer does not emit rewritten C).
+optimized LLVM IR, target assembly, and a separate conservative C source view.
 
 From the VS Code integrated terminal:
 
@@ -200,3 +240,18 @@ in `reports/history/`, anchored to this project directory, so both interfaces
 see the same runs. Existing terminal reports under `reports/runs/` also appear.
 Earlier Streamlit sessions that were never saved cannot be recovered. History
 stores source and captured output locally; opening a saved run never executes it.
+
+### Optimized LLVM IR and generated code
+
+C results show separate **Optimized LLVM IR** and **Optimized code · assembly**
+views. Assembly is generated from the displayed final IR; it is target-specific
+code. A separate **Optimized C source** view conservatively rewrites standalone
+literal `printf` calls without formats or escapes to `fputs`. Unsupported source
+is preserved with an explicit unchanged note. This is a source optimizer, not a
+decompiler; its output does not reproduce every LLVM transformation.
+Streamlit offers separate `.c`, `.ll` and `.s` downloads
+and saves each compilation under `reports/streamlit/<run-id>/`. Open the folder
+shown below the code in VS Code to inspect `original.c`, `before.ll`,
+`optimized.c`, `optimized.ll`, and `optimized.s`. Terminal reports also include both views and
+save all three files in their report artifacts folder. Saved history retains assembly
+for new runs; recompile older runs to generate it.

@@ -74,3 +74,17 @@ def test_python_levels_are_explicit():
     assert 'module docs' not in optimized.code_object.co_consts
     assert 'keep this by default' in normal.code_object.co_consts
     assert 'keep this by default' not in optimized.code_object.co_consts
+
+
+def test_optimized_assembly_links_and_preserves_literal_output():
+    import subprocess
+    from src.compiler.artifacts import save_c_artifacts
+    result = compile_native_c('#include <stdio.h>\nint main(void){printf("hello world ");return 0;}')
+    assert result['optimized_assembly']
+    with tempfile.TemporaryDirectory() as directory:
+        root = save_c_artifacts(result, directory)
+        assert (root / 'optimized.ll').read_text() == result['code']
+        binary = root / 'program'
+        subprocess.run(['clang', str(root / 'optimized.s'), '-o', str(binary)], check=True, capture_output=True)
+        execution = subprocess.run([str(binary)], check=True, capture_output=True, text=True)
+        assert execution.stdout == 'hello world '

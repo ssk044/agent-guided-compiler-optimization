@@ -69,3 +69,9 @@ reports/figures/*.png
 
 # Diagnostic screenshot only; do not include an error state in the public gallery
 assets/screenshots/diagnostic-llm-fallback.png
+
+# Local experiment history and generated compiler outputs
+reports/history/
+reports/streamlit/
+reports/runs/
+output/hello_world/
